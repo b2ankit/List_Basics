@@ -26,9 +26,16 @@ int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid){
 	int tkn_cnt;
     int length = 0;
 	jsmn_parser p;
-	jsmntok_t t[128];
+	jsmntok_t *t;
 	jsmn_init(&p);
     jiot_client_nbiot_nidd_app_details_t *appDetails = NULL;
+
+    t = (jsmntok_t *)calloc(128,sizeof(jsmntok_t));
+    if(!t)
+    {
+        printf("Memory allocation for t : Failed\n");
+        return NO_MEMORY;
+    }
 
     //storing plmid in each app set
     appDetails = (jiot_client_nbiot_nidd_app_details_t *)malloc(sizeof(jiot_client_nbiot_nidd_app_details_t));
@@ -41,7 +48,7 @@ int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid){
     /*adding in list*/
     add_Node_to_list(plmid,appDetails);
 
-	tkn_cnt = jsmn_parse(&p, json_string, strlen(json_string), t, sizeof(t)/sizeof(t[0]));
+	tkn_cnt = jsmn_parse(&p, json_string, strlen(json_string), t, 128*sizeof(jsmntok_t));
 	if (tkn_cnt < 0) {
 		printf("Failed to parse JSON: %d\n", tkn_cnt);
 		return INVALID_PARAM;
@@ -117,14 +124,21 @@ int jiot_client_nbiot_nidd_parse_aux_data(char *json_string){
 	int tkn_cnt;
     int length = 0;
 	jsmn_parser p;
-	jsmntok_t t[128];
+	jsmntok_t *t;
 	jsmn_init(&p);
     char *app_info = NULL;
     char *plmid = NULL;
     int count = 0;
     jiot_client_nbiot_nidd_app_details_t *appDeatils = NULL;
 
-	tkn_cnt = jsmn_parse(&p, json_string, strlen(json_string), t, sizeof(t)/sizeof(t[0]));
+    t = (jsmntok_t *)calloc(128,sizeof(jsmntok_t));
+    if(!t)
+    {
+        printf("Memory allocation for t : Failed\n");
+        return NO_MEMORY;
+    }
+
+	tkn_cnt = jsmn_parse(&p, json_string, strlen(json_string), t, 128*sizeof(jsmntok_t));
 	if (tkn_cnt < 0) {
 		printf("Failed to parse JSON: %d\n", tkn_cnt);
 		return INVALID_PARAM;
