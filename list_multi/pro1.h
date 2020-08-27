@@ -18,7 +18,6 @@ extern "C"{
  ************************************************************************************************************/
     typedef struct jiot_client_nbiot_nidd_app_details_t
     {
-        char *plmid;
         char *appName;
         char *svc;
         char *eid;
@@ -28,6 +27,7 @@ extern "C"{
     
     typedef struct aux_data
     {
+        char *plmid;
         jiot_client_nbiot_nidd_app_details_t *appDetails;
         struct aux_data *next;
     }jiot_client_nbiot_nidd_aux_data_t;
@@ -35,13 +35,13 @@ extern "C"{
 /*************************************************************************************************************
  
  ************************************************************************************************************/
-int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid,jiot_client_nbiot_nidd_app_details_t *appDetails);
+int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid);
 
 
 /*************************************************************************************************************
  
  ************************************************************************************************************/
-int jiot_client_nbiot_nidd_parse_aux_data(char *json_string,jiot_client_nbiot_nidd_aux_data_t *aux_data);
+int jiot_client_nbiot_nidd_parse_aux_data(char *json_string);
 
 
 /*************************************************************************************************************
@@ -58,7 +58,7 @@ void display_list();
  @add_Node_to_list : Adding Node in a list.
  @user_data : value of int which is adding in list
  ************************************************************************************************************/
-int add_Node_to_list(jiot_client_nbiot_nidd_app_details_t *app_Details);
+int add_Node_to_list(char *plmid,jiot_client_nbiot_nidd_app_details_t *app_Details);
 
 /*************************************************************************************************************
  @find_Node_in_list : Searching Node in list.
@@ -66,7 +66,7 @@ int add_Node_to_list(jiot_client_nbiot_nidd_app_details_t *app_Details);
  ************************************************************************************************************/
 jiot_client_nbiot_nidd_aux_data_t* find_Node_in_list(char *appName);
 
-
+void jiot_client_nbiot_nidd_auxData_receive();
 
 #ifdef __cplusplus
 }

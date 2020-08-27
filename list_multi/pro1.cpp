@@ -6,7 +6,7 @@
 #include "jsmn.h"
 
 
-char * aux_recv_data  = (char*)"{\"pld\":\"123pld321PLMID1a\",\"app_info\":{\"name\":\"dc\",\"svc\":\"11SVC11SVC\",\"eid\":\"11111111111111111111111111111111111111111111111111\",\"vid\":\"0VID1111\",\"aid\":\"011AID1111\"},\"app_info\":{\"name\":\"Connected_worker\",\"svc\":\"22SVC22SVC\",\"eid\":\"22222222222222222222222222222222222222222222222222\",\"vid\":\"0VID2222\",\"aid\":\"022AID2222\"},\"app_info\":{\"name\":\"People_Traker\",\"svc\":\"33SVC33SVC\",\"eid\":\"33333333333333333333333333333333333333333333333333\",\"vid\":\"0VID3333\",\"aid\":\"033AID3333\"}}";
+// char * aux_recv_data  = (char*)"{\"pld\":\"123pld321PLMID1a\",\"app_info\":{\"name\":\"dc\",\"svc\":\"11SVC11SVC\",\"eid\":\"11111111111111111111111111111111111111111111111111\",\"vid\":\"0VID1111\",\"aid\":\"011AID1111\"},\"app_info\":{\"name\":\"Connected_worker\",\"svc\":\"22SVC22SVC\",\"eid\":\"22222222222222222222222222222222222222222222222222\",\"vid\":\"0VID2222\",\"aid\":\"022AID2222\"},\"app_info\":{\"name\":\"People_Traker\",\"svc\":\"33SVC33SVC\",\"eid\":\"33333333333333333333333333333333333333333333333333\",\"vid\":\"0VID3333\",\"aid\":\"033AID3333\"}}";
 /*************************************************************************************************************
  Golbal list act as Head Node
  ************************************************************************************************************/
@@ -21,21 +21,25 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	return -1;
 }
 
-int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid,jiot_client_nbiot_nidd_app_details_t *appDetails){
+int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid){
     int tkn_iteration;
 	int tkn_cnt;
     int length = 0;
 	jsmn_parser p;
 	jsmntok_t t[128];
 	jsmn_init(&p);
+    jiot_client_nbiot_nidd_app_details_t *appDetails = NULL;
 
     //storing plmid in each app set
-    appDetails->plmid = (char *)calloc(length,sizeof(char));
-    if(!appDetails->plmid){
+    appDetails = (jiot_client_nbiot_nidd_app_details_t *)malloc(sizeof(jiot_client_nbiot_nidd_app_details_t));
+    if(!appDetails){
         printf("Memory allocation failed for appDetails->plmid\n");
         return NO_MEMORY;
     }
-    strncpy(appDetails->plmid,plmid,strlen(plmid));
+    memset(appDetails,0,sizeof(jiot_client_nbiot_nidd_app_details_t));
+
+    /*adding in list*/
+    add_Node_to_list(plmid,appDetails);
 
 	tkn_cnt = jsmn_parse(&p, json_string, strlen(json_string), t, sizeof(t)/sizeof(t[0]));
 	if (tkn_cnt < 0) {
@@ -56,7 +60,6 @@ int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid,jiot_
                 return NO_MEMORY;
             }
             strncpy(appDetails->appName,json_string+t[tkn_iteration+1].start,length-1);
-            // printf("appDetails->appName : %s\n",appDetails->appName);
 			tkn_iteration++;
 		}
 		else if (jsoneq(json_string, &t[tkn_iteration], "svc") == 0) {
@@ -67,7 +70,6 @@ int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid,jiot_
                 return NO_MEMORY;
             }
             strncpy(appDetails->svc,json_string+t[tkn_iteration+1].start,length-1);
-            // printf("appDetails->svc : %s\n",appDetails->svc);
 			tkn_iteration++;
 		}
         else if (jsoneq(json_string, &t[tkn_iteration], "eid") == 0) {
@@ -78,7 +80,6 @@ int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid,jiot_
                 return NO_MEMORY;
             }
             strncpy(appDetails->eid,json_string+t[tkn_iteration+1].start,length-1);
-            // printf("appDetails->eid : %s\n",appDetails->eid);
 			tkn_iteration++;
 		}
         else if (jsoneq(json_string, &t[tkn_iteration], "vid") == 0) {
@@ -89,7 +90,6 @@ int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid,jiot_
                 return NO_MEMORY;
             }
             strncpy(appDetails->vid,json_string+t[tkn_iteration+1].start,length-1);
-            // printf("appDetails->vid : %s\n",appDetails->vid);
 			tkn_iteration++;
 		}
         else if (jsoneq(json_string, &t[tkn_iteration], "aid") == 0) {
@@ -100,14 +100,19 @@ int jiot_client_nbiot_nidd_parse_app_details(char *json_string,char *plmid,jiot_
                 return NO_MEMORY;
             }
             strncpy(appDetails->aid,json_string+t[tkn_iteration+1].start,length-1);
-            // printf("appDetails->aid : %s\n",appDetails->aid);
+            
 			tkn_iteration++;
 		} 
 	}
+    printf("appDetails->appName : %s\n",appDetails->appName);
+    printf("appDetails->svc : %s\n",appDetails->svc);
+    printf("appDetails->eid : %s\n",appDetails->eid);
+    printf("appDetails->vid : %s\n",appDetails->vid);
+    printf("appDetails->aid : %s\n",appDetails->aid);
     return SUCCESS;
 }
 
-int jiot_client_nbiot_nidd_parse_aux_data(char *json_string,jiot_client_nbiot_nidd_aux_data_t *aux_data){
+int jiot_client_nbiot_nidd_parse_aux_data(char *json_string){
     int tkn_iteration;
 	int tkn_cnt;
     int length = 0;
@@ -115,8 +120,8 @@ int jiot_client_nbiot_nidd_parse_aux_data(char *json_string,jiot_client_nbiot_ni
 	jsmntok_t t[128];
 	jsmn_init(&p);
     char *app_info = NULL;
+    char *plmid = NULL;
     int count = 0;
-    char *plmid;
     jiot_client_nbiot_nidd_app_details_t *appDeatils = NULL;
 
 	tkn_cnt = jsmn_parse(&p, json_string, strlen(json_string), t, sizeof(t)/sizeof(t[0]));
@@ -138,7 +143,7 @@ int jiot_client_nbiot_nidd_parse_aux_data(char *json_string,jiot_client_nbiot_ni
                 return NO_MEMORY;
             }
             strncpy(plmid,json_string+t[tkn_iteration+1].start,length-1);
-            // printf("aux_data->pld : %s\n",aux_data->pld);
+            printf("aux_data->pld : %s\n",plmid);
 			tkn_iteration++;
 		}
 		else if (jsoneq(json_string, &t[tkn_iteration], "app_info") == 0) {
@@ -149,16 +154,9 @@ int jiot_client_nbiot_nidd_parse_aux_data(char *json_string,jiot_client_nbiot_ni
                 return NO_MEMORY;
             }
             strncpy(app_info,json_string+t[tkn_iteration+1].start,length-1);
-            appDeatils = (jiot_client_nbiot_nidd_app_details_t *)malloc(sizeof(jiot_client_nbiot_nidd_app_details_t));
-            if(!appDeatils){
-                printf("Memory allocation for appDetails : Failed\n");
-                return NO_MEMORY;
-            }
-            memset(appDeatils,0,sizeof(jiot_client_nbiot_nidd_app_details_t));
-            add_Node_to_list(appDeatils);
-            jiot_client_nbiot_nidd_parse_app_details(app_info,plmid,appDeatils);
-            // printf("Count : %d\tappName : %s\n",count,app_info);
 			tkn_iteration++;
+            jiot_client_nbiot_nidd_parse_app_details(app_info,plmid);
+            printf("Count : %d\tappName : %s\n",count,app_info);
             count++;
 		} 
 	}
@@ -171,7 +169,7 @@ int jiot_client_nbiot_nidd_parse_aux_data(char *json_string,jiot_client_nbiot_ni
 void display_list(){
     jiot_client_nbiot_nidd_aux_data_t *temp_node = head_node; 
     while(temp_node!=NULL){
-        printf("Pld : %s\n",temp_node->appDetails->plmid);
+        printf("Pld : %s\n",temp_node->plmid);
         printf("app : %s\n",temp_node->appDetails->appName);
         printf("svc : %s\n",temp_node->appDetails->svc);
         printf("eid : %s\n",temp_node->appDetails->eid);
@@ -188,7 +186,7 @@ void display_list(){
  @add_Node_to_list : Adding Node in a list.
  @user_data : value of int which is adding in list
  ************************************************************************************************************/
-int add_Node_to_list(jiot_client_nbiot_nidd_app_details_t *app_Details){
+int add_Node_to_list(char *plmid,jiot_client_nbiot_nidd_app_details_t *app_Details){
     jiot_client_nbiot_nidd_aux_data_t *curr_node = NULL;
     jiot_client_nbiot_nidd_aux_data_t *temp_node = NULL;
 
@@ -198,6 +196,7 @@ int add_Node_to_list(jiot_client_nbiot_nidd_app_details_t *app_Details){
         return FAILURE;
     }
     memset(curr_node,0,sizeof(jiot_client_nbiot_nidd_aux_data_t));
+    curr_node->plmid = plmid;
     curr_node->appDetails = app_Details;
     if(head_node==NULL){
         head_node = curr_node;
@@ -233,25 +232,20 @@ jiot_client_nbiot_nidd_aux_data_t* find_Node_in_list(char *appName){
     return NULL;
 }
 
-
+void jiot_client_nbiot_nidd_auxData_receive(){
+    char * aux_recv_data  = (char*)"{\"pld\":\"123pld321PLMID1a\",\"app_info\":{\"name\":\"dc\",\"svc\":\"11SVC11SVC\",\"eid\":\"11111111111111111111111111111111111111111111111111\",\"vid\":\"0VID1111\",\"aid\":\"011AID1111\"},\"app_info\":{\"name\":\"Connected_worker\",\"svc\":\"22SVC22SVC\",\"eid\":\"22222222222222222222222222222222222222222222222222\",\"vid\":\"0VID2222\",\"aid\":\"022AID2222\"},\"app_info\":{\"name\":\"People_Traker\",\"svc\":\"33SVC33SVC\",\"eid\":\"33333333333333333333333333333333333333333333333333\",\"vid\":\"0VID3333\",\"aid\":\"033AID3333\"}}";
+    jiot_client_nbiot_nidd_parse_aux_data(aux_recv_data);
+}
 int main(){
+    jiot_client_nbiot_nidd_auxData_receive();
     char app_name[30];
-    
-
-    jiot_client_nbiot_nidd_aux_data_t *auxData = NULL;
     jiot_client_nbiot_nidd_aux_data_t *user_app = NULL;
-    auxData = (jiot_client_nbiot_nidd_aux_data_t *)malloc(sizeof(jiot_client_nbiot_nidd_aux_data_t));
-    if(!auxData){
-        printf("Memory allocation for auxData : Failed\n");
-    }
-    memset(auxData,0,sizeof(jiot_client_nbiot_nidd_aux_data_t));
-    jiot_client_nbiot_nidd_parse_aux_data(aux_recv_data,auxData);
     display_list();
     printf("enter appName : ");
     scanf("%s",&app_name);
     user_app = find_Node_in_list(app_name);
     if(user_app!=NULL){
-        printf("Pld : %s\n",user_app->appDetails->plmid);
+        printf("Pld : %s\n",user_app->plmid);
         printf("app : %s\n",user_app->appDetails->appName);
         printf("svc : %s\n",user_app->appDetails->svc);
         printf("eid : %s\n",user_app->appDetails->eid);
